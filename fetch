@@ -1,0 +1,38 @@
+import re
+import subprocess
+import os
+addr_rep = ['https://github.com/ZTEwangyan/rep1.git','https://github.com/ZTEwangyan/rep2.git','https://github.com/ZTEwangyan/rep3.git']
+dest_rep = ['/home/wangyan/UTAC/rep1','/home/wangyan/LTE/rep2','/home/wangyan/LTE/rep3']
+rep_dict = {}
+# create a dict to store the reposition and the branches
+def last_of_path(repo_str):
+    pattern = re.compile(r'/')
+    res      = re.split(pattern,repo_str)
+    return res[len(res)-1]
+def fetch_master(index):
+    cmd = ['git', 'clone', addr_rep[index], dest_rep[index]]
+    subprocess.check_output(cmd)
+def save_other_branches(current):
+    branches = []
+    cmd = ['git', 'branch', '-a']
+    stdout = subprocess.check_output(cmd)
+    print (stdout)
+    for each in stdout.splitlines():
+        if (not re.match('.*master', each, re.IGNORECASE)):
+            branches.append(last_of_path(each))
+    with open(current + '.txt', 'w+') as f:
+        f.write(str(branches))
+    return branches
+def fetch_other_branches(branches):
+    for branch in branches:
+        command_new_branch = ['git','checkout','-b',branch,'origin/'+branch]
+        subprocess.check_output(command_new_branch)
+def fetch():
+    for index in range(0,len(addr_rep)):
+        repo_name = last_of_path(addr_rep[index])
+        fetch_master(index)
+        os.chdir(dest_rep[index])
+        branches = save_other_branches('rep'+str(index))
+        fetch_other_branches(branches)
+if __name__ == '__main__':
+    fetch()
